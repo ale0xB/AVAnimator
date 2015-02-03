@@ -35,7 +35,7 @@
   "subspecs": [
     {
       "name": "ASM",
-      "source_files": "Classes/**/*.{s}",
+      "source_files": "Classes/**/*.{s}"
     }
   ]
 }
