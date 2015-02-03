@@ -36,7 +36,6 @@
     {
       "name": "ASM",
       "source_files": "Classes/**/*.{s}",
-      "compiler_flags": "-no-integrated-as"
     }
   ]
 }
