@@ -494,7 +494,7 @@
                                                   userInfo: NULL
                                                    repeats: TRUE];
   
-	[[NSRunLoop currentRunLoop] addTimer: self.animatorPrepTimer forMode: NSDefaultRunLoopMode];
+	[[NSRunLoop currentRunLoop] addTimer: self.animatorPrepTimer forMode: NSRunLoopCommonModes];
 }
 
 // This callback is invoked as a result of a timer just after the startAnimator
@@ -522,7 +522,7 @@
                                                    userInfo: NULL
                                                     repeats: FALSE];
   
-  [[NSRunLoop currentRunLoop] addTimer:self.animatorDecodeTimer forMode:NSDefaultRunLoopMode];
+  [[NSRunLoop currentRunLoop] addTimer:self.animatorDecodeTimer forMode:NSRunLoopCommonModes];
   
   // Start playing audio or record the start time if using simulated audio clock
   
@@ -656,7 +656,7 @@
                                                    userInfo: NULL
                                                     repeats: FALSE];
 
-  [[NSRunLoop currentRunLoop] addTimer:self.animatorDecodeTimer forMode:NSDefaultRunLoopMode];
+  [[NSRunLoop currentRunLoop] addTimer:self.animatorDecodeTimer forMode:NSRunLoopCommonModes];
 
   return;
 }
@@ -839,7 +839,7 @@
                                                       userInfo: NULL
                                                        repeats: FALSE];
     
-    [[NSRunLoop currentRunLoop] addTimer: self.animatorDisplayTimer forMode: NSDefaultRunLoopMode];  
+    [[NSRunLoop currentRunLoop] addTimer: self.animatorDisplayTimer forMode: NSRunLoopCommonModes];
     
     // Schedule a decode operation
     
@@ -851,7 +851,7 @@
                                                      userInfo: NULL
                                                       repeats: FALSE];
     
-    [[NSRunLoop currentRunLoop] addTimer: self.animatorDecodeTimer forMode: NSDefaultRunLoopMode];
+    [[NSRunLoop currentRunLoop] addTimer: self.animatorDecodeTimer forMode: NSRunLoopCommonModes];
     
     // Kick off the audio clock
     
@@ -1023,7 +1023,7 @@
                                                       userInfo: NULL
                                                        repeats: FALSE];
     
-		[[NSRunLoop currentRunLoop] addTimer: self.animatorDecodeTimer forMode: NSDefaultRunLoopMode];
+		[[NSRunLoop currentRunLoop] addTimer: self.animatorDecodeTimer forMode: NSRunLoopCommonModes];
 	} else {
 		// Reported time is now at least half way to the second frame, so
 		// we are ready to schedule recurring callbacks. Invoking the
@@ -1178,7 +1178,7 @@
                                                        userInfo: NULL
                                                         repeats: FALSE];
     
-		[[NSRunLoop currentRunLoop] addTimer: self.animatorDisplayTimer forMode: NSDefaultRunLoopMode];			
+		[[NSRunLoop currentRunLoop] addTimer: self.animatorDisplayTimer forMode: NSRunLoopCommonModes];
 	}
   
 	// Schedule the next frame decode operation. Figure out when the
@@ -1237,7 +1237,7 @@
                                                       userInfo: NULL
                                                        repeats: FALSE];
     
-		[[NSRunLoop currentRunLoop] addTimer: self.animatorDecodeTimer forMode: NSDefaultRunLoopMode];		
+		[[NSRunLoop currentRunLoop] addTimer: self.animatorDecodeTimer forMode: NSRunLoopCommonModes];
 	}
   
 	// Decode the next frame, this operation could take some time, so it needs to
