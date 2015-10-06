@@ -27,6 +27,8 @@
 
 #import "AVFileUtil.h"
 
+#import "AVFrame.h"
+
 @interface AVAnimatorMediaTests : NSObject {
 }
 @end
@@ -753,21 +755,19 @@
   UIView *view = [[UIView alloc] initWithFrame:frame];
   CALayer *viewLayer = view.layer;
   
-#if __has_feature(objc_arc)
-#else
-  NSAutoreleasePool *inner_pool = [[NSAutoreleasePool alloc] init];
-#endif // objc_arc
+  AVAnimatorLayer *avLayerObj;
   
-  AVAnimatorLayer *avLayerObj = [AVAnimatorLayer aVAnimatorLayer:viewLayer];
+  @autoreleasepool
+  {
+  avLayerObj = [AVAnimatorLayer aVAnimatorLayer:viewLayer];
   NSAssert(avLayerObj, @"avLayerObj");
 
 #if __has_feature(objc_arc)
 #else
   // Explicitly retain the layer
   [avLayerObj retain];
-  
-  [inner_pool drain];
 #endif // objc_arc
+  } // end autoreleasepool
   
   [window addSubview:view];
   
@@ -822,8 +822,7 @@
   NSAssert(avLayerObj.media == nil, @"animatorView connected to media");
   NSAssert(media.renderer == nil, @"media connected to animatorView");
   
-  // Now reattach and then drop the last ref to the view. This should detach
-  // the media from the view as part of the view dealloc method.
+  // Now reattach and then drop the last ref to the view.
   
   [avLayerObj attachMedia:media];
 
@@ -831,6 +830,11 @@
   
   [view removeFromSuperview];
 
+  // The view is not longer part of the view hier, so dropping the
+  // existing ref to the view object should drop the last ref to
+  // the avLayerObj which should in turn invoke dealloc on the
+  // AVAnimatorLayer class and nil out the renderer.
+  
 #if __has_feature(objc_arc)
   avLayerObj = nil;
   view = nil;
@@ -914,5 +918,99 @@
   return;
 }
 
+// Check that connecting a view and a media object and then
+// starting playback on the media object will set the
+// image only once.
+
++ (void) testMediaSendImageOnce
+{
+  id appDelegate = [[UIApplication sharedApplication] delegate];
+  UIWindow *window = [appDelegate window];
+  NSAssert(window, @"window");
+  
+  NSString *resourceName = @"2x2_black_blue_16BPP.mvid";
+  
+  // Create view that would be the render destination for the media
+  
+  CGRect frame = CGRectMake(0, 0, 480, 320);
+  AVAnimatorView *animatorView = [AVAnimatorView aVAnimatorViewWithFrame:frame];
+  
+  // Add the view to the containing window and visit the event loop so that the
+  // window system setup is complete.
+  
+  [window addSubview:animatorView];
+  NSAssert(animatorView.window != nil, @"not added to window");
+  
+  // Create Media object
+  
+  AVAnimatorMedia *media = [AVAnimatorMedia aVAnimatorMedia];
+  
+  // Create loader that will attempt to read the phone path from the filesystem
+  
+  AVAppResourceLoader *resLoader = [AVAppResourceLoader aVAppResourceLoader];
+  resLoader.movieFilename = resourceName;
+  media.resourceLoader = resLoader;
+  
+  // Create decoder that will generate frames from Quicktime Animation encoded data
+  
+  AVMvidFrameDecoder *frameDecoder = [AVMvidFrameDecoder aVMvidFrameDecoder];
+  media.frameDecoder = frameDecoder;
+  
+  media.animatorFrameDuration = 1.0;
+  
+  [media prepareToAnimate];
+  
+  // Wait for a moment to see if media object was loaded. Note that the
+  // isReadyToAnimate is TRUE when loading works. In this case, attaching
+  // the media to the view did not work, but that is not the same thing
+  // as failing to load.
+  
+  BOOL worked = [RegressionTests waitUntilTrue:media
+                                      selector:@selector(isReadyToAnimate)
+                                   maxWaitTime:0.5];
+  NSAssert(worked, @"worked");
+  
+  // The media should have been loaded, it would not have been attached to the view
+  // at this point.
+  
+  NSAssert(media.state == READY, @"media.state");
+  
+  NSAssert(animatorView.media == nil, @"animatorView connected to media");
+  NSAssert(media.renderer == nil, @"media connected to animatorView");
+  
+  [animatorView attachMedia:media];
+  
+  NSAssert(animatorView.media == media, @"animatorView not connected to media");
+  NSAssert(media.renderer == animatorView, @"media not connected to animatorView");
+
+  // The media object should have sent a frame to the view as a result
+  // of the attachMedia call.
+  
+  AVFrame *avFrame1 = animatorView.frameObj;
+  UIImage *img1 = avFrame1.image;
+  
+  NSAssert(avFrame1, @"frame");
+  
+  // Invoking startAnimator for the media should not change the frame data
+  // since the media should be at frame zero already. This basically checks
+  // that an implicit rewind is not being done when the media has not ever
+  // been started.
+  
+  [media startAnimator];
+
+  AVFrame *avFrame2 = animatorView.frameObj;
+  NSAssert(avFrame2, @"frame");
+  UIImage *img2 = avFrame2.image;
+  
+  // Calling startAnimator should not have changed the image object
+  
+  NSAssert(img1 == img2, @"frame changed by startAnimator");
+  
+  [media stopAnimator];
+  
+  [animatorView removeFromSuperview];
+  
+  return;
+}
 
 @end // AVAnimatorMediaTests
